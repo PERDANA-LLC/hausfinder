@@ -10,7 +10,8 @@ import {
   addPropertyImages, getPropertyImages, deletePropertyImage, setPrimaryImage,
   toggleFavorite, getUserFavorites, getUserFavoriteIds, isFavorite,
   createInquiry, getPropertyInquiries, getUserInquiries, markInquiryAsRead, getUnreadInquiryCount,
-  getPropertiesForMap, getUserById
+  getPropertiesForMap, getUserById,
+  ensureSuperAdmin, isSuperAdmin, isUserImmutable, getAllUsers, updateUserRole, deleteUser
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -402,6 +403,64 @@ Return ONLY the description text, no additional formatting or labels.`;
         const content = response.choices[0]?.message?.content;
         const description = typeof content === 'string' ? content.trim() : '';
         return { description };
+      }),
+  }),
+
+  // Super Admin router - only accessible by superadmin role
+  admin: router({
+    // Check if current user is super admin
+    isSuperAdmin: protectedProcedure.query(async ({ ctx }) => {
+      return isSuperAdmin(ctx.user.id);
+    }),
+
+    // Get all users (super admin only)
+    listUsers: protectedProcedure.query(async ({ ctx }) => {
+      const isSuper = await isSuperAdmin(ctx.user.id);
+      if (!isSuper) {
+        throw new Error("Unauthorized: Super admin access required");
+      }
+      return getAllUsers();
+    }),
+
+    // Update user role (super admin only, cannot modify immutable users)
+    updateRole: protectedProcedure
+      .input(z.object({
+        userId: z.number(),
+        role: z.enum(["user", "admin", "agent", "superadmin"]),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const isSuper = await isSuperAdmin(ctx.user.id);
+        if (!isSuper) {
+          throw new Error("Unauthorized: Super admin access required");
+        }
+
+        // Check if target user is immutable
+        const isImmutable = await isUserImmutable(input.userId);
+        if (isImmutable) {
+          throw new Error("Cannot modify immutable user");
+        }
+
+        await updateUserRole(input.userId, input.role);
+        return { success: true };
+      }),
+
+    // Delete user (super admin only, cannot delete immutable users)
+    deleteUser: protectedProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const isSuper = await isSuperAdmin(ctx.user.id);
+        if (!isSuper) {
+          throw new Error("Unauthorized: Super admin access required");
+        }
+
+        // Check if target user is immutable
+        const isImmutable = await isUserImmutable(input.userId);
+        if (isImmutable) {
+          throw new Error("Cannot delete immutable user");
+        }
+
+        await deleteUser(input.userId);
+        return { success: true };
       }),
   }),
 });

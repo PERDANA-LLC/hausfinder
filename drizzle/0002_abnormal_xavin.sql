@@ -1,0 +1,2 @@
+ALTER TABLE `users` MODIFY COLUMN `role` enum('user','admin','agent','superadmin') NOT NULL DEFAULT 'user';--> statement-breakpoint
+ALTER TABLE `users` ADD `isImmutable` boolean DEFAULT false NOT NULL;

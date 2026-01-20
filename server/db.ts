@@ -467,3 +467,114 @@ export async function getPropertiesForMap() {
       sql`${properties.longitude} IS NOT NULL`
     ));
 }
+
+
+// ============ SUPER ADMIN QUERIES ============
+
+const SUPER_ADMIN_EMAIL = "superadmin@guest.com";
+
+export async function ensureSuperAdmin() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot ensure super admin: database not available");
+    return;
+  }
+
+  // Check if super admin exists
+  const existing = await db.select().from(users)
+    .where(eq(users.email, SUPER_ADMIN_EMAIL))
+    .limit(1);
+
+  if (existing.length === 0) {
+    // Create super admin with a unique openId
+    await db.insert(users).values({
+      openId: `superadmin-${Date.now()}`,
+      name: "Super Admin",
+      email: SUPER_ADMIN_EMAIL,
+      role: "superadmin",
+      isImmutable: true,
+      lastSignedIn: new Date(),
+    });
+    console.log("[Database] Super admin created successfully");
+  } else if (existing[0].role !== "superadmin" || !existing[0].isImmutable) {
+    // Ensure super admin has correct role and is immutable
+    await db.update(users)
+      .set({ role: "superadmin", isImmutable: true })
+      .where(eq(users.email, SUPER_ADMIN_EMAIL));
+    console.log("[Database] Super admin role and immutability enforced");
+  }
+}
+
+export async function isSuperAdmin(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db.select().from(users)
+    .where(and(eq(users.id, userId), eq(users.role, "superadmin")))
+    .limit(1);
+
+  return result.length > 0;
+}
+
+export async function isUserImmutable(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db.select().from(users)
+    .where(and(eq(users.id, userId), eq(users.isImmutable, true)))
+    .limit(1);
+
+  return result.length > 0;
+}
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    role: users.role,
+    isImmutable: users.isImmutable,
+    createdAt: users.createdAt,
+    lastSignedIn: users.lastSignedIn,
+  }).from(users).orderBy(desc(users.createdAt));
+}
+
+export async function updateUserRole(userId: number, role: "user" | "admin" | "agent" | "superadmin") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if user is immutable
+  const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (user.length > 0 && user[0].isImmutable) {
+    throw new Error("Cannot modify immutable user");
+  }
+
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+export async function deleteUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if user is immutable
+  const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (user.length > 0 && user[0].isImmutable) {
+    throw new Error("Cannot delete immutable user");
+  }
+
+  await db.delete(users).where(eq(users.id, userId));
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}

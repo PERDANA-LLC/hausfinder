@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { ensureSuperAdmin } from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -48,6 +49,13 @@ async function startServer() {
     await setupVite(app, server);
   } else {
     serveStatic(app);
+  }
+
+  // Ensure super admin exists on startup
+  try {
+    await ensureSuperAdmin();
+  } catch (error) {
+    console.warn("[Server] Could not ensure super admin:", error);
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");

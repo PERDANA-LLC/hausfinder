@@ -52,3 +52,9 @@
 - [x] Add user_guide.md with comprehensive platform documentation
 - [x] Create interactive walkthrough guide with screenshots for video tutorial basis
 - [x] Capture high-quality screenshots for all walkthrough guide sections
+
+## Admin Features
+- [x] Add superadmin role to user schema
+- [x] Add immutable flag to protect super admin accounts
+- [x] Create superadmin@guest.com with unrestricted access
+- [x] Protect immutable accounts from deletion/demotion

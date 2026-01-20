@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, email, role, isImmutable FROM users WHERE email = 'superadmin@guest.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3zbWDt6ojYujPWx.7ceb2252a56e --database HDSFTFLCeXUPdWHf8zasmN --execute SELECT id, name, email, role, isImmutable FROM users WHERE email = 'superadmin@guest.com';",
+  "rows": [
+    {
+      "id": "30025",
+      "name": "Super Admin",
+      "email": "superadmin@guest.com",
+      "role": "superadmin",
+      "isImmutable": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tisImmutable\n30025\tSuper Admin\tsuperadmin@guest.com\tsuperadmin\t1\n",
+  "stderr": "",
+  "execution_time_ms": 368
+}
