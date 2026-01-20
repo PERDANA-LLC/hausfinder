@@ -1,0 +1,8 @@
+Screenshot Notes for Walkthrough Guide
+======================================
+
+1. Homepage Hero (homepage-hero)
+   - URL: https://3000-ilxobyb7pgdanv2k8trfi-20d43c7b.us1.manus.computer/
+   - Shows: Navigation bar, hero section with search, quick filter buttons
+   - Key elements: HausFinder logo, nav menu, search bar, "Houses for Sale", "Apartments for Rent" buttons
+

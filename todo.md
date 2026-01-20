@@ -50,3 +50,4 @@
 
 ## Documentation
 - [x] Add user_guide.md with comprehensive platform documentation
+- [x] Create interactive walkthrough guide with screenshots for video tutorial basis
