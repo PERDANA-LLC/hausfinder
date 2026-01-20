@@ -1,0 +1,22 @@
+HausFinder Screenshot Capture Log
+==================================
+
+Capture Date: January 20, 2026
+Purpose: Video tutorial production reference
+
+Screenshots Captured:
+---------------------
+
+01-homepage-hero-dark.png
+- Page: Homepage (/)
+- Theme: Dark
+- Content: Hero section with navigation, headline, search bar, quick filters
+- Key elements: HausFinder logo, nav menu, "Find Your Perfect Home" headline, search input, filter buttons
+
+02-homepage-properties-dark.png
+- Page: Homepage (/)
+- Theme: Dark
+- Content: Featured properties grid section
+- Key elements: Property cards with images, prices in SBD, status badges, bedroom/bathroom counts
+
+(Continuing capture...)
