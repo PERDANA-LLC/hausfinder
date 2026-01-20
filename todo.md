@@ -40,3 +40,10 @@
 - [x] Inquiry submission procedures
 - [x] AI description generation procedure
 - [x] Email notification integration
+
+
+## Demo Content
+- [x] Add 5-10 demo property listings with images
+- [x] Include variety of property types (houses, apartments, land)
+- [x] Include both rental and sale listings
+- [x] Add realistic Honiara locations and pricing in SBD
