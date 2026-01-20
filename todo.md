@@ -47,3 +47,6 @@
 - [x] Include variety of property types (houses, apartments, land)
 - [x] Include both rental and sale listings
 - [x] Add realistic Honiara locations and pricing in SBD
+
+## Documentation
+- [x] Add user_guide.md with comprehensive platform documentation
