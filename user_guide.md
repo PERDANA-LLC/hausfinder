@@ -1,6 +1,6 @@
 # HausFinder User Guide
 
-**Version 1.0** | **Solomon Islands Property Marketplace**
+**Version 1.1** | **Solomon Islands Property Marketplace**
 
 ---
 
@@ -19,7 +19,8 @@
 11. [Contacting Property Owners](#contacting-property-owners)
 12. [Theme Settings](#theme-settings)
 13. [Mobile Usage](#mobile-usage)
-14. [FAQ](#faq)
+14. [Admin Dashboard](#admin-dashboard)
+15. [FAQ](#faq)
 
 ---
 
@@ -38,6 +39,7 @@ HausFinder is the premier property listing platform designed specifically for th
 | Favorites System | Save properties you love for easy access later |
 | Contact Forms | Reach property owners directly through the platform |
 | User Dashboard | Manage all your listings and inquiries in one place |
+| Admin Dashboard | Full user management and role control for administrators |
 
 ### Supported Property Types
 
@@ -417,6 +419,117 @@ The platform is designed for lower bandwidth connections common in the Solomon I
 
 ---
 
+## Admin Dashboard
+
+The Admin Dashboard provides powerful management capabilities for platform administrators. This section is only accessible to users with **Admin** or **Super Admin** roles.
+
+### Accessing the Admin Dashboard
+
+Administrators can access the dashboard through a dedicated login:
+
+1. Navigate to `/admin-login` in your browser
+2. Enter your admin email address
+3. Enter your admin password
+4. Click **Sign In to Admin**
+5. Upon successful authentication, you will be redirected to the Admin Dashboard
+
+### User Roles
+
+HausFinder supports four user roles with different permission levels:
+
+| Role | Description | Capabilities |
+|------|-------------|-------------|
+| **User** | Standard platform user | Browse, search, favorite properties, contact owners |
+| **Agent** | Real estate agent | All User capabilities plus enhanced listing features |
+| **Admin** | Platform administrator | All Agent capabilities plus user management |
+| **Super Admin** | System owner | Full unrestricted access, immutable account |
+
+### Dashboard Overview
+
+The Admin Dashboard displays key metrics at a glance:
+
+- **Total Users** – Complete count of registered users
+- **Admins** – Number of users with Admin or Super Admin roles
+- **Agents** – Number of registered real estate agents
+- **Regular Users** – Standard user accounts
+
+### User Management
+
+Administrators can perform full CRUD (Create, Read, Update, Delete) operations on user accounts.
+
+#### Creating a New User
+
+1. Click the **Add User** button
+2. Fill in the required fields:
+   - **Name** – User's full name (required)
+   - **Email** – Valid email address (required)
+   - **Password** – Optional password for admin login capability
+   - **Role** – Select from User, Agent, Admin, or Super Admin
+   - **Phone** – Optional contact number
+3. Click **Create User** to save
+
+#### Editing a User
+
+1. Locate the user in the User Management table
+2. Click the **Edit** (pencil) icon in the Actions column
+3. Modify any fields as needed
+4. Click **Update User** to save changes
+
+#### Changing User Roles
+
+To change a user's role:
+
+1. Click the Edit icon for the target user
+2. Select the new role from the Role dropdown
+3. Save changes
+
+**Note:** The Super Admin account (`superadmin@guest.com`) is immutable and cannot have its role changed.
+
+#### Deleting a User
+
+1. Click the **Delete** (trash) icon for the user
+2. Confirm the deletion in the dialog
+3. The user account will be permanently removed
+
+**Note:** Immutable accounts (Super Admin) cannot be deleted.
+
+### Super Admin Account
+
+The platform includes a built-in Super Admin account with special protections:
+
+| Property | Value |
+|----------|-------|
+| **Email** | superadmin@guest.com |
+| **Password** | guest.com@superadmin |
+| **Role** | Super Admin |
+| **Status** | Immutable (cannot be deleted or demoted) |
+
+The Super Admin account:
+
+- Has unrestricted access to all platform features
+- Cannot be deleted by any user
+- Cannot have its role changed
+- Is automatically created on system initialization
+- Is indicated by a lock icon in the user table
+
+### Security Considerations
+
+- Admin login uses secure password hashing (bcrypt)
+- Session tokens are JWT-based with 7-day expiration
+- All admin actions are authenticated server-side
+- The admin login page is separate from regular user authentication
+
+### Admin Navigation
+
+The Admin Dashboard header provides quick navigation:
+
+| Button | Function |
+|--------|----------|
+| **Back to Site** | Return to the main HausFinder platform |
+| **Logout** | End admin session and return to login page |
+
+---
+
 ## FAQ
 
 ### General Questions
@@ -479,4 +592,4 @@ For additional assistance or to report issues, please contact the HausFinder sup
 
 ---
 
-*This guide was last updated: January 2026*
+*This guide was last updated: January 21, 2026*
