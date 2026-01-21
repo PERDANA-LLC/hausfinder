@@ -9,6 +9,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 32 }),
+  passwordHash: varchar("passwordHash", { length: 255 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin", "agent", "superadmin"]).default("user").notNull(),
   isImmutable: boolean("isImmutable").default(false).notNull(),

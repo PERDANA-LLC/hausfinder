@@ -12,6 +12,8 @@ import EditListing from "./pages/EditListing";
 import Dashboard from "./pages/Dashboard";
 import Favorites from "./pages/Favorites";
 import MapView from "./pages/MapView";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function Router() {
   return (
@@ -24,6 +26,8 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/favorites" component={Favorites} />
       <Route path="/map" component={MapView} />
+      <Route path="/admin-login" component={AdminLogin} />
+      <Route path="/admin" component={AdminDashboard} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

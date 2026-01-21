@@ -11,8 +11,11 @@ import {
   toggleFavorite, getUserFavorites, getUserFavoriteIds, isFavorite,
   createInquiry, getPropertyInquiries, getUserInquiries, markInquiryAsRead, getUnreadInquiryCount,
   getPropertiesForMap, getUserById,
-  ensureSuperAdmin, isSuperAdmin, isUserImmutable, getAllUsers, updateUserRole, deleteUser
+  ensureSuperAdmin, isSuperAdmin, isUserImmutable, getAllUsers, updateUserRole, deleteUser,
+  authenticateAdmin, hashPassword, createUserByAdmin, updateUserByAdmin
 } from "./db";
+import { SignJWT } from "jose";
+import { ENV } from "./_core/env";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
@@ -28,6 +31,47 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+
+    // Admin login with email and password
+    adminLogin: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const user = await authenticateAdmin(input.email, input.password);
+        if (!user) {
+          throw new Error("Invalid email or password");
+        }
+
+        // Create JWT token with the same format as sdk.signSession
+        const secret = new TextEncoder().encode(ENV.cookieSecret);
+        const token = await new SignJWT({
+          openId: user.openId,
+          appId: ENV.appId,
+          name: user.name || "Super Admin",
+        })
+          .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+          .setExpirationTime(Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000))
+          .sign(secret);
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, {
+          ...cookieOptions,
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        };
+      }),
   }),
 
   property: router({
@@ -410,7 +454,8 @@ Return ONLY the description text, no additional formatting or labels.`;
   admin: router({
     // Check if current user is super admin
     isSuperAdmin: protectedProcedure.query(async ({ ctx }) => {
-      return isSuperAdmin(ctx.user.id);
+      const checkIsSuperAdmin = await import("./db").then(m => m.isSuperAdmin);
+      return checkIsSuperAdmin(ctx.user.id);
     }),
 
     // Get all users (super admin only)
@@ -461,6 +506,85 @@ Return ONLY the description text, no additional formatting or labels.`;
 
         await deleteUser(input.userId);
         return { success: true };
+      }),
+
+    // Create new user (super admin only)
+    createUser: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        password: z.string().min(6).optional(),
+        role: z.enum(["user", "admin", "agent", "superadmin"]),
+        phone: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const isSuper = await isSuperAdmin(ctx.user.id);
+        if (!isSuper) {
+          throw new Error("Unauthorized: Super admin access required");
+        }
+
+        const userId = await createUserByAdmin({
+          name: input.name,
+          email: input.email,
+          password: input.password,
+          role: input.role,
+          phone: input.phone,
+        });
+
+        return { success: true, userId };
+      }),
+
+    // Update existing user (super admin only)
+    updateUser: protectedProcedure
+      .input(z.object({
+        userId: z.number(),
+        name: z.string().min(1).optional(),
+        email: z.string().email().optional(),
+        password: z.string().min(6).optional(),
+        role: z.enum(["user", "admin", "agent", "superadmin"]).optional(),
+        phone: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const isSuper = await isSuperAdmin(ctx.user.id);
+        if (!isSuper) {
+          throw new Error("Unauthorized: Super admin access required");
+        }
+
+        await updateUserByAdmin(input.userId, {
+          name: input.name,
+          email: input.email,
+          password: input.password,
+          role: input.role,
+          phone: input.phone,
+        });
+
+        return { success: true };
+      }),
+
+    // Get single user details (super admin only)
+    getUser: protectedProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const isSuper = await isSuperAdmin(ctx.user.id);
+        if (!isSuper) {
+          throw new Error("Unauthorized: Super admin access required");
+        }
+
+        const user = await getUserById(input.userId);
+        if (!user) {
+          throw new Error("User not found");
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          isImmutable: user.isImmutable,
+          createdAt: user.createdAt,
+          lastSignedIn: user.lastSignedIn,
+        };
       }),
   }),
 });

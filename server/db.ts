@@ -1,5 +1,6 @@
-import { eq, and, or, like, desc, asc, sql, inArray } from "drizzle-orm";
+import { eq, and, or, desc, asc, like, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import bcrypt from "bcryptjs";
 import { 
   InsertUser, users, 
   properties, InsertProperty, Property,
@@ -472,6 +473,15 @@ export async function getPropertiesForMap() {
 // ============ SUPER ADMIN QUERIES ============
 
 const SUPER_ADMIN_EMAIL = "superadmin@guest.com";
+const SUPER_ADMIN_PASSWORD = "guest.com@superadmin";
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
 
 export async function ensureSuperAdmin() {
   const db = await getDb();
@@ -480,29 +490,68 @@ export async function ensureSuperAdmin() {
     return;
   }
 
+  // Hash the super admin password
+  const passwordHash = await hashPassword(SUPER_ADMIN_PASSWORD);
+
   // Check if super admin exists
   const existing = await db.select().from(users)
     .where(eq(users.email, SUPER_ADMIN_EMAIL))
     .limit(1);
 
   if (existing.length === 0) {
-    // Create super admin with a unique openId
+    // Create super admin with a unique openId and password
     await db.insert(users).values({
       openId: `superadmin-${Date.now()}`,
       name: "Super Admin",
       email: SUPER_ADMIN_EMAIL,
+      passwordHash,
       role: "superadmin",
       isImmutable: true,
       lastSignedIn: new Date(),
     });
-    console.log("[Database] Super admin created successfully");
-  } else if (existing[0].role !== "superadmin" || !existing[0].isImmutable) {
-    // Ensure super admin has correct role and is immutable
-    await db.update(users)
-      .set({ role: "superadmin", isImmutable: true })
-      .where(eq(users.email, SUPER_ADMIN_EMAIL));
-    console.log("[Database] Super admin role and immutability enforced");
+    console.log("[Database] Super admin created successfully with password");
+  } else {
+    // Update super admin to ensure correct role, immutability, and password
+    const updateData: Record<string, unknown> = {};
+    if (existing[0].role !== "superadmin") updateData.role = "superadmin";
+    if (!existing[0].isImmutable) updateData.isImmutable = true;
+    if (!existing[0].passwordHash) updateData.passwordHash = passwordHash;
+    
+    if (Object.keys(updateData).length > 0) {
+      await db.update(users)
+        .set(updateData)
+        .where(eq(users.email, SUPER_ADMIN_EMAIL));
+      console.log("[Database] Super admin updated");
+    }
   }
+}
+
+export async function authenticateAdmin(email: string, password: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(users)
+    .where(and(
+      eq(users.email, email),
+      or(eq(users.role, "superadmin"), eq(users.role, "admin"))
+    ))
+    .limit(1);
+
+  if (result.length === 0 || !result[0].passwordHash) {
+    return null;
+  }
+
+  const isValid = await verifyPassword(password, result[0].passwordHash);
+  if (!isValid) {
+    return null;
+  }
+
+  // Update last signed in
+  await db.update(users)
+    .set({ lastSignedIn: new Date() })
+    .where(eq(users.id, result[0].id));
+
+  return result[0];
 }
 
 export async function isSuperAdmin(userId: number): Promise<boolean> {
@@ -577,4 +626,78 @@ export async function getUserByEmail(email: string) {
     .limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+
+export async function createUserByAdmin(data: {
+  name: string;
+  email: string;
+  password?: string;
+  role: "user" | "admin" | "agent" | "superadmin";
+  phone?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if email already exists
+  const existing = await db.select().from(users).where(eq(users.email, data.email)).limit(1);
+  if (existing.length > 0) {
+    throw new Error("Email already exists");
+  }
+
+  const passwordHash = data.password ? await hashPassword(data.password) : null;
+
+  const result = await db.insert(users).values({
+    openId: `admin-created-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    passwordHash,
+    role: data.role,
+    isImmutable: false,
+    lastSignedIn: new Date(),
+  });
+
+  return result[0].insertId;
+}
+
+export async function updateUserByAdmin(userId: number, data: {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: "user" | "admin" | "agent" | "superadmin";
+  phone?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if user is immutable
+  const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (user.length === 0) {
+    throw new Error("User not found");
+  }
+  if (user[0].isImmutable) {
+    throw new Error("Cannot modify immutable user");
+  }
+
+  // Check if new email already exists (if changing email)
+  if (data.email && data.email !== user[0].email) {
+    const existing = await db.select().from(users).where(eq(users.email, data.email)).limit(1);
+    if (existing.length > 0) {
+      throw new Error("Email already exists");
+    }
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.phone !== undefined) updateData.phone = data.phone;
+  if (data.role !== undefined) updateData.role = data.role;
+  if (data.password) updateData.passwordHash = await hashPassword(data.password);
+
+  if (Object.keys(updateData).length > 0) {
+    await db.update(users).set(updateData).where(eq(users.id, userId));
+  }
+
+  return { success: true };
 }
