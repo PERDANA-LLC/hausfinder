@@ -88,8 +88,8 @@ export default function Navbar() {
                     className="gap-2 relative"
                   >
                     <link.icon className="w-4 h-4" />
-                    {link.label}
-                    {link.href === "/dashboard" && unreadCount && unreadCount > 0 && (
+                    <span>{link.label}</span>
+                    {link.href === "/dashboard" && unreadCount !== undefined && unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
                         {unreadCount}
                       </span>
