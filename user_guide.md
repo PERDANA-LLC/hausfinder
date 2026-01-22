@@ -500,7 +500,7 @@ The platform includes a built-in Super Admin account with special protections:
 | Property | Value |
 |----------|-------|
 | **Email** | superadmin@guest.com |
-| **Password** | guest.com@superadmin |
+| **Password** | guest.com@superadmin1 |
 | **Role** | Super Admin |
 | **Status** | Immutable (cannot be deleted or demoted) |
 

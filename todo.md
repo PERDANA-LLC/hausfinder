@@ -64,3 +64,4 @@
 - [x] Build admin dashboard UI for user CRUD operations
 - [x] Add role management functionality in admin dashboard
 - [x] Update user_guide.md with admin dashboard and super admin documentation
+- [x] Change super admin password to guest.com@superadmin1

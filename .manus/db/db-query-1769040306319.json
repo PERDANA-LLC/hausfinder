@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET passwordHash = '$2a$10$placeholder' WHERE email = 'superadmin@guest.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3zbWDt6ojYujPWx.7ceb2252a56e --database HDSFTFLCeXUPdWHf8zasmN --execute UPDATE users SET passwordHash = '$2a$10$placeholder' WHERE email = 'superadmin@guest.com';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 374
+}

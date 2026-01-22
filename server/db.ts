@@ -473,7 +473,7 @@ export async function getPropertiesForMap() {
 // ============ SUPER ADMIN QUERIES ============
 
 const SUPER_ADMIN_EMAIL = "superadmin@guest.com";
-const SUPER_ADMIN_PASSWORD = "guest.com@superadmin";
+const SUPER_ADMIN_PASSWORD = "guest.com@superadmin1";
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
@@ -515,7 +515,8 @@ export async function ensureSuperAdmin() {
     const updateData: Record<string, unknown> = {};
     if (existing[0].role !== "superadmin") updateData.role = "superadmin";
     if (!existing[0].isImmutable) updateData.isImmutable = true;
-    if (!existing[0].passwordHash) updateData.passwordHash = passwordHash;
+    // Always update password hash to ensure it matches the configured password
+    updateData.passwordHash = passwordHash;
     
     if (Object.keys(updateData).length > 0) {
       await db.update(users)
