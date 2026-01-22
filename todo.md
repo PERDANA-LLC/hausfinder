@@ -68,3 +68,4 @@
 
 ## Bug Fixes
 - [x] Fix navbar displaying "Dashboard0" instead of "Dashboard"
+- [x] Add Admin Dashboard button to navbar for super admin users

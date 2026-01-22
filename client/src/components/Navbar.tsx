@@ -24,6 +24,7 @@ import {
   Sun,
   Moon,
   Bell,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -117,6 +118,16 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <>
+                {/* Admin Dashboard Button - Only for Super Admin */}
+                {user?.role === "superadmin" && (
+                  <Link href="/admin">
+                    <Button size="sm" variant="outline" className="hidden sm:flex gap-2 border-primary/50 text-primary hover:bg-primary/10">
+                      <Shield className="w-4 h-4" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
+
                 {/* List Property Button */}
                 <Link href="/list-property">
                   <Button size="sm" className="hidden sm:flex gap-2 glow-orange">
@@ -233,6 +244,18 @@ export default function Navbar() {
                       </Button>
                     </Link>
                   ))}
+                  {user?.role === "superadmin" && (
+                    <Link href="/admin">
+                      <Button
+                        variant={isActive("/admin") ? "secondary" : "ghost"}
+                        className="w-full justify-start gap-2 text-primary"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Shield className="w-4 h-4" />
+                        Admin Dashboard
+                      </Button>
+                    </Link>
+                  )}
                   <Link href="/list-property">
                     <Button
                       className="w-full justify-start gap-2"
